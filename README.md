@@ -13,7 +13,7 @@ a CAN bus traffic analizer which uses a custom protocol over a USB serial port e
 - CAN transceiver can be supplied externally via 5V pin or from USB through power switch
 - Cost-effective hardware: PCB is only 30 x 15 mm, low component count
 
-## USB Communcation Protocol
+## USB Communication Protocol
 
 The device appears as a standard virtual COM port (CDC-ACM with vendor-specific protocol) when connected to a host machine. 
 The setup of the interface is done through control requests, 
@@ -26,7 +26,7 @@ Setting up the CAN bus parameters is analogical to the serial port setup. The sa
 
 Data = {dwBaudrate (4), bTrcvPwr */Stop bit/* (1), bTestMode */Parity/* (1), bDataBits (1)}
 
-1. **dwBaudrate** baudrate of the CAN bus in bit/s
+1. **dwBaudrate** baudrate of the CAN bus in bit/s (bit timing is calculated internally)
 2. **bTrcvPwr** when set, connects USB 5V to the on-board CAN transceiver
 3. **bTestMode** 0 for normal operation, 1 for loopback 
 4. **bDataBits** read-only, returns 64
