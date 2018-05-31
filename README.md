@@ -9,7 +9,7 @@ The device appears as a standard virtual COM port (CDC-ACM with vendor-specific 
 The setup of the interface is done through control requests, 
 while the bus activity is communicated through the dedicated data endpoints.
 
-### I. CAN bus setup
+### CAN bus setup
 
 Setting up the CAN bus parameters is analogical to the serial port setup. The same request format is used
 (get = 0x21, set = 0x20), but the interpretation of certain values is changed for this application.
@@ -21,7 +21,7 @@ Data = {dwBaudrate (4), bTrcvPwr */Stop bit/* (1), bTestMode */Parity/* (1), bDa
 3. **bTestMode** 0 for normal operation, 1 for loopback 
 4. **bDataBits** read-only, returns 64
 
-### II. Data pipe packets
+### Data pipe packets
 
 The data channel has a specific message format. The first byte is always the total length of the message (including the length byte). The second byte is the message type, and the rest is type dependent, as shown in the table below:
 
@@ -31,9 +31,8 @@ The data channel has a specific message format. The first byte is always the tot
 | 4		 | 0x02 | CAN standard RTR frame   | {2 byte ID} |
 | 6..14  | 0x04 | CAN extended data frame  | {4 byte ID; 0..8 byte data} |
 | 6      | 0x06 | CAN extended RTR frame   | {4 byte ID} |
-|--------|------|--------------------------|---------------------|
 | 3      | 0x40 | CAN bus error 		   | {1 byte error info} |
-| 2      | 0x8x | CAN frame sent by device | {} |
+| 2      | 0x8# | CAN frame sent by device | {} |
 
 The last two types are only sent by the device, the others are both sent by the host to initiate a CAN frame transmission on the bus and by the device when it read a CAN frame from the bus.
 
