@@ -1,9 +1,19 @@
-# CanDybugFW
+# CanDybug
 
 This repository contains the embedded firmware of the CanDybug,
 a CAN bus traffic analizer which uses a custom protocol over a USB serial port emulation.
 
-## USB Protocol
+## Features
+
+- Full-speed USB 2.0 device
+- Supports USB firmware upgrade
+- Can be interfaced as a serial port
+- Using [USBDevice][USBDevice] the interface can be effortlessly integrated or duplicated in a composite USB device
+- Efficient USB transfer format allows high speed CAN operation with minimal latency
+- CAN transceiver can be supplied externally via 5V pin or from USB through power switch
+- Cost-effective hardware: PCB is only 30 x 15 mm, low component count
+
+## USB Communcation Protocol
 
 The device appears as a standard virtual COM port (CDC-ACM with vendor-specific protocol) when connected to a host machine. 
 The setup of the interface is done through control requests, 
@@ -38,12 +48,17 @@ The last two types are only sent by the device, the others are both sent by the 
 
 ## Hardware design
 
-The PCB with its respective BOM is available on [OSHPark](https://oshpark.com/shared_projects/jVh7PNHF).
+The PCB with its respective BOM is available on [OSHPark][OSHPark].
 
 ## External dependencies
 
 This firmware relies on the following external sources:
-1. The **CMSIS** and **STM32F{x}_XPD** libraries are imported from [STM32_XPD](https://github.com/IntergatedCircuits/STM32_XPD)
-2. The USB device library (including CDC and DFU classes) are imported from [USBDevice](https://github.com/IntergatedCircuits/USBDevice)
-3. The [DFU bootloader](https://github.com/IntergatedCircuits/DfuBootloader) is used with the following parameters:
+1. The **CMSIS** and **STM32F{x}_XPD** libraries are imported from [STM32_XPD][STM32_XPD]
+2. The USB device library (including CDC and DFU classes) are imported from [USBDevice][USBDevice]
+3. The [DFU bootloader][DfuBootloader] is used with the following parameters:
 `FLASH_APP_ADDRESS=0x08002000, FLASH_APP_SIZE=24568, BSP=STM32F0x2, FLASH_BYTE_PROGRAM_TIME_us=30, FLASH_TOTAL_ERASE_TIME_ms=480, USBD_VID=0xFFFF, USBD_PID=0xFFFF, VDD_VALUE_mV=3300, core=cm0`
+
+[OSHPark]: https://oshpark.com/shared_projects/jVh7PNHF
+[STM32_XPD]: https://github.com/IntergatedCircuits/STM32_XPD
+[USBDevice]: https://github.com/IntergatedCircuits/USBDevice
+[DfuBootloader]: https://github.com/IntergatedCircuits/DfuBootloader
