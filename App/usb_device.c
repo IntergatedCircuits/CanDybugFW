@@ -86,7 +86,7 @@ void UsbDevice_Init(void)
             can_if->Config.OutEpNum = 0x01;
             can_if->Config.NotEpNum = 0x8F;
 
-            USBD_DFU_AppInit(dfu_if, 100); /* Detach can be carried out within 100 ms */
+            USBD_DFU_AppInit(dfu_if, 250); /* Detach can be carried out within 250 ms */
 
             /* Mount the interfaces to the device */
             USBD_DFU_MountInterface(dfu_if, UsbDevice);
