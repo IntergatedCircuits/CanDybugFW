@@ -5,12 +5,13 @@ a CAN bus traffic analizer which uses a custom protocol over a USB serial port e
 
 ## Features
 
+- Transmit and receive CAN 2.0A/B (ISO-11898) frames
 - Full-speed USB 2.0 device
+- Efficient USB transfer format allows high speed CAN operation with minimal latency
+- CAN transceiver can be supplied externally via 5V pin or from USB through power switch
 - Supports USB firmware upgrade
 - Can be interfaced as a serial port
 - Using [USBDevice][USBDevice] the interface can be effortlessly integrated or duplicated in a composite USB device
-- Efficient USB transfer format allows high speed CAN operation with minimal latency
-- CAN transceiver can be supplied externally via 5V pin or from USB through power switch
 - Cost-effective hardware: PCB is only 30 x 15 mm, low component count
 
 ## USB Communication Protocol
@@ -33,18 +34,21 @@ Data = {dwBaudrate (4), bTrcvPwr */Stop bit/* (1), bTestMode */Parity/* (1), bDa
 
 ### Data pipe packets
 
-The data channel has a specific message format. The first byte is always the total length of the message (including the length byte). The second byte is the message type, and the rest is type dependent, as shown in the table below:
+The bidirectional data channel has a specific message format.
+The first byte is always the total length of the message (including the length byte).
+The second byte is the message type, and the rest is type dependent, as shown in the table below:
 
 | Length | Code | Message type             | Payload |
 |:------:|:----:|:-------------------------|:--------|
 | 4..12  | 0x00 | CAN standard data frame  | {2 byte ID; 0..8 byte data} |
-| 4		 | 0x02 | CAN standard RTR frame   | {2 byte ID} |
+| 4      | 0x02 | CAN standard RTR frame   | {2 byte ID} |
 | 6..14  | 0x04 | CAN extended data frame  | {4 byte ID; 0..8 byte data} |
 | 6      | 0x06 | CAN extended RTR frame   | {4 byte ID} |
-| 3      | 0x40 | CAN bus error 		   | {1 byte error info} |
+| 3      | 0x40 | CAN bus error            | {1 byte error info} |
 | 2      | 0x8# | CAN frame sent by device | {} |
 
-The last two types are only sent by the device, the others are both sent by the host to initiate a CAN frame transmission on the bus and by the device when it read a CAN frame from the bus.
+The last two types are only sent by the device, the others are both sent by the hostto initiate a CAN frame transmission on the bus and by the device when it read a CAN frame from the bus.
+The frames are always transmitted in the order they are sent to the device.
 
 ## Hardware design
 
