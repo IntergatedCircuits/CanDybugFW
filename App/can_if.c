@@ -220,11 +220,10 @@ static void CanIf_SendInData(void)
  */
 static void CanIf_AddMessage(uint8_t * msg, uint8_t length)
 {
-    length++;
-    if (QUEUE_SPACE(CanIf_IN) >= length)
+    if (QUEUE_SPACE(CanIf_IN) > length)
     {
-        QUEUE_PUT(CanIf_IN, length);
-        QUEUE_PUT_ARRAY(CanIf_IN, msg, length - 1);
+        QUEUE_PUT(CanIf_IN, length + 1);
+        QUEUE_PUT_ARRAY(CanIf_IN, msg, length);
 
         CanIf_SendInData();
     }
