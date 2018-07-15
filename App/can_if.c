@@ -2,7 +2,7 @@
 #include <can_if.h>
 #include <bsp_can.h>
 #include <bsp_io.h>
-#include <queue.h>
+#include <queues.h>
 #include <string.h>
 
 static void             Can_Init            (void);

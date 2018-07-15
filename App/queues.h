@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    queue.h
+  * @file    queues.h
   * @author  Benedek Kupper
   * @version 0.1
   * @date    2017-06-10
@@ -20,8 +20,11 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef __QUEUE_H_
-#define __QUEUE_H_
+#ifndef __QUEUES_H_
+#define __QUEUES_H_
+
+/** @defgroup Queues Circular queue buffer implementation
+ * @{ */
 
 /**
  * @brief Defines a new queue.
@@ -89,6 +92,25 @@ static struct {                                                     \
     (Q).head = 0 : (Q).head] = (ELEMENT))
 
 /**
+ * @brief Reads an array of elements from the queue tail.
+ * @param Q: Name of the queue as a variable
+ * @param ELEMENTS: The array of elements to add
+ * @param SIZE: The size of the array
+ */
+#define QUEUE_GET_ARRAY(Q, ELEMENTS, SIZE)                          \
+    do { uint32_t _I_ = 0, _LEN2_, _LEN_ = ((Q).tail < (Q).head) ?  \
+                (Q).head - (Q).tail : (Q).size - (Q).tail;          \
+        if ((SIZE) < _LEN_) { _LEN_ = (SIZE); }                     \
+        _LEN2_ = (SIZE) - _LEN_;                                    \
+        while (_I_ < _LEN_)                                         \
+        {   ELEMENTS[_I_++] = (Q).buffer[++(Q).tail]; }             \
+        if (_LEN2_ > 0) {                                           \
+            (Q).tail = 0;                                           \
+            while (_LEN2_--)                                        \
+            {   ELEMENTS[_I_++] = (Q).buffer[++(Q).tail]; }         \
+    }   } while (0)
+
+/**
  * @brief Writes an array of elements to the queue head.
  * @param Q: Name of the queue as a variable
  * @param ELEMENTS: The array of elements to add
@@ -97,14 +119,16 @@ static struct {                                                     \
 #define QUEUE_PUT_ARRAY(Q, ELEMENTS, SIZE)                          \
     do { uint32_t _I_ = 0, _LEN2_, _LEN_ = ((Q).tail > (Q).head) ?  \
                 (Q).tail - (Q).head - 1 : (Q).size - (Q).head;      \
-        if ((SIZE) < _LEN_) _LEN_ = (SIZE);                         \
+        if ((SIZE) < _LEN_) { _LEN_ = (SIZE); }                     \
         _LEN2_ = (SIZE) - _LEN_;                                    \
         while (_I_ < _LEN_)                                         \
-            (Q).buffer[++(Q).head] = ELEMENTS[_I_++];               \
+        {   (Q).buffer[++(Q).head] = ELEMENTS[_I_++]; }             \
         if (_LEN2_ > 0) {                                           \
             (Q).head = 0;                                           \
             while (_LEN2_--)                                        \
-                (Q).buffer[++(Q).head] = ELEMENTS[_I_++];           \
+            {   (Q).buffer[++(Q).head] = ELEMENTS[_I_++]; }         \
     }   } while (0)
 
-#endif /* __QUEUE_H_ */
+/** @} */
+
+#endif /* __QUEUES_H_ */
