@@ -39,7 +39,7 @@ const USBD_DescriptionType hdev_cfg = {
     .Product = {
         .Name           = "CanDybug",
         .ID             = 0xffff, /* TODO placeholder */
-        .Version        = {{ 1,0xC }},
+        .Version.bcd    = 0x010C,
     },
     .SerialNumber       = (USBD_SerialNumberType*)DEVICE_ID_REG,
     .Config = {
