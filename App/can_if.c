@@ -1,12 +1,32 @@
-
+/**
+  ******************************************************************************
+  * @file    can_if.c
+  * @author  Benedek Kupper
+  * @version 0.1
+  * @date    2018-05-31
+  * @brief   CanDybug USB interface
+  *
+  * Copyright (c) 2018 Benedek Kupper
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 #include <can_if.h>
 #include <bsp_can.h>
 #include <bsp_io.h>
 #include <queues.h>
 #include <string.h>
 
-static void             Can_Init            (void);
-static void             Can_Deinit          (void);
+static void             Can_Close           (void);
 static XPD_ReturnType   Can_Setup           (uint32_t baudrate, FunctionalState trcvPwr, CAN_ModeType testMode);
 static XPD_ReturnType   Can_Start           (void);
 static boolean_t        Can_HandleRequest   (uint8_t * msg, uint8_t length);
@@ -28,11 +48,10 @@ CAN_InitType CanConfig = {
     .Settings.Mode = CAN_MODE_NORMAL,
     .Settings.TXFP = ENABLE,
 };
-static uint32_t CanBitrate;
 
 QUEUE_DEF(CanTxQ, CAN_TxMailBox_TypeDef, (CANIF_OUT_DATA_SIZE / 2));
 
-static void CanIf_Control       (USB_SetupRequestType * req, uint8_t* pbuf);
+static void CanIf_Open          (USBD_CDC_LineCodingType * line);
 static void CanIf_EpOutComplete (uint8_t * pbuf, uint16_t length);
 static void CanIf_EpInComplete  (uint8_t * pbuf, uint16_t length);
 static void CanIf_AddMessage    (uint8_t * msg, uint8_t length);
@@ -49,11 +68,10 @@ static struct {
 const USBD_CDC_AppType canApp =
 {
     .Name           = "CAN bus interface",
-    .Init           = Can_Init,
-    .Deinit         = Can_Deinit,
-    .Control        = CanIf_Control,
+    .Open           = CanIf_Open,
     .Received       = CanIf_EpOutComplete,
     .Transmitted    = CanIf_EpInComplete,
+    .Close          = Can_Close,
 };
 
 USBD_CDC_IfHandleType hcan_if = {
@@ -64,56 +82,39 @@ USBD_CDC_IfHandleType hcan_if = {
 
 /**
  * @brief  Configure or reset CAN based on reinterpreted CDC commands
- * @param  req: Setup request
- * @param  pbuf: Buffer containing command data (request parameters)
+ * @param  line: CAN bus configuration
  */
-static void CanIf_Control(USB_SetupRequestType * req, uint8_t* pbuf)
+static void CanIf_Open(USBD_CDC_LineCodingType * line)
 {
-    /* Returns the current CAN configuration */
-    if (req->Request == CDC_REQ_GET_LINE_CODING)
+    uint8_t fmi[1];
+
+    GPIO_vInitPin(CAN_SILENT_PIN, CAN_SILENT_CFG);
+    GPIO_vInitPin(CAN_TRV_PS_PIN, CAN_TRV_PS_CFG);
+    GPIO_vWritePin(CAN_SILENT_PIN, 1);
+    GPIO_vWritePin(CAN_TRV_PS_PIN, 0);
+
+    RCC_vClockEnable(Can->CtrlPos);
+
+    /* Configure reception filters */
+    CAN_eFilterConfig(Can, CanFilters, fmi, 1);
+
+    /* Callbacks subscriptions */
+    Can->Callbacks.Receive[0] = Can_FrameReceived;
+    Can->Callbacks.Transmit   = Can_FrameSent;
+    Can->Callbacks.Error      = Can_BusError;
+
+    /* TODO: LEDs init */
+
+
+    if ((XPD_OK == Can_Setup(line->DTERate, line->CharFormat, line->ParityType)) &&
+        (XPD_OK == Can_Start()))
     {
-        USBD_CDC_LineCodingType* line = (USBD_CDC_LineCodingType*)pbuf;
-        line->DTERate    = CanBitrate;
-        line->CharFormat = GPIO_eReadPin(CAN_TRV_PS_PIN);
-        line->ParityType = CanConfig.Settings.Mode;
-        line->DataBits   = 64;
-    }
-    else
-    {
-        XPD_ReturnType result = XPD_ERROR;
+        /* empty all buffers */
+        CanIf_IN.head = CanIf_IN.tail = 0;
+        CanIf_OUT.offset = 0;
 
-        /* Sets the CAN configuration */
-        if (req->Request == CDC_REQ_SET_LINE_CODING)
-        {
-            USBD_CDC_LineCodingType* line = (USBD_CDC_LineCodingType*)pbuf;
-
-            result = Can_Setup(line->DTERate, line->CharFormat, line->ParityType);
-        }
-        /* Resets the CAN interface */
-        else if (req->Request == CDC_REQ_SEND_BREAK)
-        {
-            /* Only pass if CAN is initialized already */
-            if (CanBitrate > 0)
-            {
-                CAN_vDeinit(Can);
-
-                /* Break = FALSE to reinitialize CAN as well */
-                if (req->Value == 0)
-                {
-                    result = XPD_OK;
-                }
-            }
-        }
-
-        if ((XPD_OK == result) && (XPD_OK == Can_Start()))
-        {
-            /* empty all buffers */
-            CanIf_IN.head = CanIf_IN.tail = 0;
-            CanIf_OUT.offset = 0;
-
-            /* Start receiving frames */
-            CanIf_ReceiveOutData();
-        }
+        /* Start receiving frames */
+        CanIf_ReceiveOutData();
     }
 }
 
@@ -230,36 +231,9 @@ static void CanIf_AddMessage(uint8_t * msg, uint8_t length)
 }
 
 /**
- * @brief  This function is called from USB CDC when the device is connected.
- */
-static void Can_Init(void)
-{
-    uint8_t fmi[1];
-
-    GPIO_vInitPin(CAN_SILENT_PIN, CAN_SILENT_CFG);
-    GPIO_vInitPin(CAN_TRV_PS_PIN, CAN_TRV_PS_CFG);
-    GPIO_vWritePin(CAN_SILENT_PIN, 1);
-    GPIO_vWritePin(CAN_TRV_PS_PIN, 0);
-
-    RCC_vClockEnable(Can->CtrlPos);
-
-    /* Configure reception filters */
-    CAN_eFilterConfig(Can, CanFilters, fmi, 1);
-
-    /* Callbacks subscriptions */
-    Can->Callbacks.Receive[0] = Can_FrameReceived;
-    Can->Callbacks.Transmit   = Can_FrameSent;
-    Can->Callbacks.Error      = Can_BusError;
-
-    CanBitrate = 0;
-
-    /* TODO: LEDs init */
-}
-
-/**
  * @brief  This function is called from USB CDC when the device is disconnected.
  */
-static void Can_Deinit(void)
+static void Can_Close(void)
 {
     CAN_vDeinit(Can);
     GPIO_vDeinitPin(CAN_SILENT_PIN);
@@ -470,7 +444,6 @@ static XPD_ReturnType Can_Setup(uint32_t baudrate, FunctionalState trcvPwr, CAN_
 
     if (XPD_OK == result)
     {
-        CanBitrate = baudrate;
         CanConfig.Settings.Mode = testMode;
 
         /* Set transceiver power */
