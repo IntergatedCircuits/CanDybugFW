@@ -37,7 +37,7 @@ extern "C"
 
 #define CAN_SILENT_PIN      GPIOC, 13
 #define CAN_SILENT_CFG      (&BSP_IOCfg[0])
-#define CAN_TRV_PS_PIN      GPIOA, 8
+#define CAN_TRV_PS_PIN      GPIOA, 10
 #define CAN_TRV_PS_CFG      (&BSP_IOCfg[0])
 
 #define USB_DP_PIN          GPIOA, 12
