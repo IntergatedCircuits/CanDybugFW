@@ -1,4 +1,4 @@
-# CanDybug
+# CanDybug [![Build Status](https://travis-ci.org/IntergatedCircuits/CanDybugFW.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/CanDybugFW)
 
 This repository contains the embedded firmware of the CanDybug,
 a CAN bus traffic analizer which uses a custom protocol over a USB serial port emulation.
@@ -56,11 +56,15 @@ The PCB with its respective BOM is available on [OSHPark][OSHPark].
 
 ## External dependencies
 
-This firmware relies on the following external sources:
-1. The **CMSIS** and **STM32F{x}_XPD** libraries are imported from [STM32_XPD][STM32_XPD]
-2. The USB device library (including CDC and DFU classes) are imported from [USBDevice][USBDevice]
-3. The [DFU bootloader][DfuBootloader] is used with the following parameters:
-`FLASH_APP_ADDRESS=0x08002000, FLASH_APP_SIZE=24568, BSP=STM32F0x2, FLASH_BYTE_PROGRAM_TIME_us=30, FLASH_TOTAL_ERASE_TIME_ms=480, USBD_VID=0xFFFF, USBD_PID=0xFFFF, VDD_VALUE_mV=3300, core=cm0`
+This firmware uses [DFU bootloader][DfuBootloader],
+which is built for this target with the following parameters:
+
+`TARGET_HEADER="\<stm32f040x6.h\>" SERIES=STM32F0 FLASH_APP_ADDRESS=0x08002000, FLASH_APP_SIZE=24*1024, FLASH_TOTAL_ERASE_TIME_ms=480, USBD_VID=0xFFFF, USBD_PID=0xF042, VDD_VALUE_mV=3300`
+
+For a standalone operation the DFU interface must not be mounted on the application USB device,
+and the application flash offset has to be removed.
+
+Built with GCC ARM tools.
 
 [OSHPark]: https://oshpark.com/shared_projects/jVh7PNHF
 [STM32_XPD]: https://github.com/IntergatedCircuits/STM32_XPD
