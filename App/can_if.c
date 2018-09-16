@@ -25,8 +25,9 @@
 #include <bsp_io.h>
 #include <queues.h>
 #include <string.h>
+#include <leds.h>
 
-static void             Can_Close           (void);
+static void             Can_Close           (void * itf);
 static XPD_ReturnType   Can_Setup           (uint32_t baudrate, FunctionalState trcvPwr, CAN_ModeType testMode);
 static XPD_ReturnType   Can_Start           (void);
 static boolean_t        Can_HandleRequest   (uint8_t * msg, uint8_t length);
@@ -51,9 +52,9 @@ CAN_InitType CanConfig = {
 
 QUEUE_DEF(CanTxQ, CAN_TxMailBox_TypeDef, (CANIF_OUT_DATA_SIZE / 2));
 
-static void CanIf_Open          (USBD_CDC_LineCodingType * line);
-static void CanIf_EpOutComplete (uint8_t * pbuf, uint16_t length);
-static void CanIf_EpInComplete  (uint8_t * pbuf, uint16_t length);
+static void CanIf_Open          (void * itf, USBD_CDC_LineCodingType * line);
+static void CanIf_EpOutComplete (void * itf, uint8_t * pbuf, uint16_t length);
+static void CanIf_EpInComplete  (void * itf, uint8_t * pbuf, uint16_t length);
 static void CanIf_AddMessage    (uint8_t * msg, uint8_t length);
 static void CanIf_SendInData    (void);
 static void CanIf_ReceiveOutData(void);
@@ -81,10 +82,11 @@ USBD_CDC_IfHandleType hcan_if = {
 }, *const can_if = &hcan_if;
 
 /**
- * @brief  Configure or reset CAN based on reinterpreted CDC commands
- * @param  line: CAN bus configuration
+ * @brief Configure or reset CAN based on reinterpreted CDC commands
+ * @param itf: callback sender interface
+ * @param line: CAN bus configuration
  */
-static void CanIf_Open(USBD_CDC_LineCodingType * line)
+static void CanIf_Open(void * itf, USBD_CDC_LineCodingType * line)
 {
     uint8_t fmi[1];
 
@@ -94,6 +96,7 @@ static void CanIf_Open(USBD_CDC_LineCodingType * line)
     GPIO_vWritePin(CAN_TRV_PS_PIN, 0);
 
     RCC_vClockEnable(Can->CtrlPos);
+    RCC_vReset(Can->CtrlPos);
 
     /* Configure reception filters */
     CAN_eFilterConfig(Can, CanFilters, fmi, 1);
@@ -102,9 +105,6 @@ static void CanIf_Open(USBD_CDC_LineCodingType * line)
     Can->Callbacks.Receive[0] = Can_FrameReceived;
     Can->Callbacks.Transmit   = Can_FrameSent;
     Can->Callbacks.Error      = Can_BusError;
-
-    /* TODO: LEDs init */
-
 
     if ((XPD_OK == Can_Setup(line->DTERate, line->CharFormat, line->ParityType)) &&
         (XPD_OK == Can_Start()))
@@ -115,15 +115,19 @@ static void CanIf_Open(USBD_CDC_LineCodingType * line)
 
         /* Start receiving frames */
         CanIf_ReceiveOutData();
+
+        /* init LEDs */
+        Leds_Init();
     }
 }
 
 /**
- * @brief  Process new USB OUT data by extracting requests
- * @param  pbuf: Buffer of received data
- * @param  length: Number of data received (in bytes)
+ * @brief Process new USB OUT data by extracting requests
+ * @param itf: callback sender interface
+ * @param pbuf: Buffer of received data
+ * @param length: Number of data received (in bytes)
  */
-static void CanIf_EpOutComplete(uint8_t * pbuf, uint16_t length)
+static void CanIf_EpOutComplete(void * itf, uint8_t * pbuf, uint16_t length)
 {
     length += CanIf_OUT.offset;
     pbuf   -= CanIf_OUT.offset;
@@ -172,18 +176,19 @@ static void CanIf_ReceiveOutData(void)
 
 /**
  * @brief Sends available IN data upon completion of the previous.
+ * @param itf: callback sender interface
  * @param pbuf: unused
  * @param length: unused
  */
-static void CanIf_EpInComplete(uint8_t * pbuf, uint16_t length)
+static void CanIf_EpInComplete(void * itf, uint8_t * pbuf, uint16_t length)
 {
     CanIf_SendInData();
 }
 
 /**
- * @brief  This function is called when USB IN transfer completes
- *         or when new IN data is added. It requests new USB IN transfer
- *         if the pipe is free.
+ * @brief This function is called when USB IN transfer completes
+ *        or when new IN data is added. It requests new USB IN transfer
+ *        if the pipe is free.
  */
 static void CanIf_SendInData(void)
 {
@@ -231,15 +236,15 @@ static void CanIf_AddMessage(uint8_t * msg, uint8_t length)
 }
 
 /**
- * @brief  This function is called from USB CDC when the device is disconnected.
+ * @brief This function is called from USB CDC when the device is disconnected.
+ * @param itf: callback sender interface
  */
-static void Can_Close(void)
+static void Can_Close(void * itf)
 {
     CAN_vDeinit(Can);
     GPIO_vDeinitPin(CAN_SILENT_PIN);
     GPIO_vDeinitPin(CAN_TRV_PS_PIN);
-
-    /* TODO: LEDs deinit */
+    Leds_Deinit();
 }
 
 /**
@@ -363,7 +368,8 @@ static void Can_FrameReceived(void * handle)
         CAN_RXFLAG_CLEAR(Can, 0, RFOM);
     }
 
-    /* TODO: LED indication */
+    /* LED indication */
+    Leds_Trigger(GREEN);
 }
 
 /**
@@ -406,7 +412,8 @@ static void Can_FrameSent(void * handle)
 
         CanIf_ReceiveOutData();
 
-        /* TODO: LED indication */
+        /* LED indication */
+        Leds_Trigger(GREEN);
     }
 }
 
@@ -429,7 +436,22 @@ static void Can_BusError(void * handle)
     /* Clear error interrupt flag */
     CAN_FLAG_CLEAR(Can, ERRI);
 
-    /* TODO: LED indication */
+    /* LED indication */
+    Leds_Trigger(RED);
+
+    /* Stop transmitting at high error rates */
+    if ((msg[1] & (CAN_ERROR_ERRORPASSIVE | CAN_ERROR_BUSOFF)) != 0)
+    {
+        /* Abort all Tx mailboxes */
+        uint8_t txmb;
+        for (txmb = 0; txmb < 3; txmb++)
+        {
+            CAN_TXFLAG_CLEAR(Can, txmb, ABRQ);
+        }
+
+        /* Reset transmit queue */
+        CanTxQ.head = CanTxQ.tail = 0;
+    }
 }
 
 /**
@@ -471,7 +493,6 @@ static XPD_ReturnType Can_Start(void)
     /* Reset transmit queue */
     CanTxQ.head = CanTxQ.tail = 0;
 
-    /* TODO: LED indication */
     return result;
 }
 

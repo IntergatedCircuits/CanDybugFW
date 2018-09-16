@@ -26,6 +26,11 @@ extern "C"
 #define USB_DM_PIN          GPIOA, 11
 #define USB_DM_CFG          (&BSP_IOCfg[2])
 
+#define LED_RED_PIN         GPIOB, 0
+#define LED_RED_CFG         (&BSP_IOCfg[3])
+#define LED_GREEN_PIN       GPIOB, 13
+#define LED_GREEN_CFG       (&BSP_IOCfg[3])
+
 extern const GPIO_InitType BSP_IOCfg[];
 
 #ifdef __cplusplus

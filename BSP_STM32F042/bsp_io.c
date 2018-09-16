@@ -47,4 +47,12 @@ const GPIO_InitType BSP_IOCfg[] =
         .Output.Speed = VERY_HIGH,
         .AlternateMap = GPIO_USB_AF2,
     },
+    /* used for LED PWM */
+    {
+        .Mode = GPIO_MODE_ALTERNATE,
+        .Pull = GPIO_PULL_FLOAT,
+        .Output.Type  = GPIO_OUTPUT_PUSHPULL,
+        .Output.Speed = VERY_HIGH,
+        .AlternateMap = GPIO_TIM1_AF2,
+    },
 };

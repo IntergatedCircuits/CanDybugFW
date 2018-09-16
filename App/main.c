@@ -25,6 +25,7 @@
 
 #include <bsp_can.h>
 #include <bsp_system.h>
+#include <bsp_tim.h>
 #include <bsp_usb.h>
 
 #include <usb_device.h>
@@ -36,7 +37,7 @@ int main(void)
     /* Initialize BSP variables */
     BSP_CAN_Bind();
     BSP_USB_Bind();
-    /* TODO Bind LEDs peripherals */
+    BSP_LedTimer_Bind();
 
     /* Configure system clocks */
     SystemClock_Config();

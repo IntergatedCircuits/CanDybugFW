@@ -31,6 +31,6 @@ const GPIO_InitType BSP_IOCfg[] =
         .Pull = GPIO_PULL_FLOAT,
         .Output.Type  = GPIO_OUTPUT_PUSHPULL,
         .Output.Speed = VERY_HIGH,
-        .AlternateMap = GPIO_TIM1_AF2,
+        .AlternateMap = GPIO_TIM1_AF6,
     },
 };
