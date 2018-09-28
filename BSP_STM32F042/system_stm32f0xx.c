@@ -22,6 +22,7 @@
   */
 #include <xpd_flash.h>
 #include <xpd_rcc.h>
+#include <xpd_syscfg.h>
 #include <xpd_utils.h>
 
 /** @brief Global variable used to store the actual system clock frequency [Hz] */
@@ -44,7 +45,7 @@ static void VectorTableRemap(void)
         *desc++ = *src++;
 
     /* Set Memory Mode to SRAM (0x20000000 is remapped to 0x00000000) */
-    SYSCFG->CFGR1.b.MEM_MODE = 3;
+    SYSTEM_MEMORY_REMAP(SRAM);
 }
 
 /**
@@ -65,10 +66,10 @@ void SystemInit(void)
     /* initialize XPD services */
     XPD_vInit();
 
-    /* TODO Configure system memory options */
-    FLASH_vPrefetchBuffer(ENABLE);
-
     /* Due to application offset in flash,
      * interrupt vectors have to be mapped to SRAM */
     VectorTableRemap();
+
+    /* TODO Configure system memory options */
+    FLASH_vPrefetchBuffer(ENABLE);
 }

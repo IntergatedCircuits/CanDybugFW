@@ -35,7 +35,4 @@
 /* TODO step 4: specify oscillator parameters */
 #define HSE_VALUE_Hz 12000000
 
-/* TODO step 5: specify vector table location */
-#define VECT_TAB_OFFSET  0x2000
-
 #endif /* __XPD_CONFIG_H_ */
