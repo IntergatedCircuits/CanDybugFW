@@ -14,6 +14,8 @@ a CAN bus traffic analizer which uses a custom protocol over a USB serial port e
 - Using [USBDevice][USBDevice] the interface can be effortlessly integrated or duplicated in a composite USB device
 - Cost-effective hardware: PCB is only 30 x 15 mm, low component count
 
+![Top View](Media/Top.png)
+
 ## USB Communication Protocol
 
 The device appears as a standard virtual COM port (CDC-ACM with vendor-specific protocol) when connected to a host machine. 
