@@ -194,25 +194,34 @@ static void CanIf_SendInData(void)
 {
     if (CanIf_IN.tail != CanIf_IN.head)
     {
-        uint32_t newtail;
-        uint32_t length;
+        uint32_t start, newtail, length;
 
-        /* If the CAN head is ahead, transmit the new data */
-        if (CanIf_IN.tail < CanIf_IN.head)
+        /* If tail is at the end, the next valid element is at 0 index */
+        if (CanIf_IN.tail == CanIf_IN.size)
         {
-            length  = CanIf_IN.head - CanIf_IN.tail;
-            newtail = CanIf_IN.head;
+            length = CanIf_IN.head + 1;
+            start = 0;
+            newtail = length - 1;
         }
-        /* If the USB IN index is ahead, the buffer has wrapped,
-         * transmit until the end */
         else
         {
-            length  = CanIf_IN.size - CanIf_IN.tail;
-            newtail = 0;
+            /* If the CAN head is ahead, transmit the new data */
+            if (CanIf_IN.tail < CanIf_IN.head)
+            {
+                length = CanIf_IN.head - CanIf_IN.tail;
+            }
+            /* If the USB IN index is ahead, the buffer has wrapped,
+             * transmit until the end */
+            else
+            {
+                length = CanIf_IN.size - CanIf_IN.tail;
+            }
+            start = CanIf_IN.tail + 1;
+            newtail = CanIf_IN.tail + length;
         }
 
         if (USBD_E_OK == USBD_CDC_Transmit(can_if,
-                &CanIf_IN.buffer[CanIf_IN.tail + 1], length))
+                &CanIf_IN.buffer[start], length))
         {
             CanIf_IN.tail = newtail;
         }
