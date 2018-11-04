@@ -18,8 +18,9 @@ a CAN bus traffic analizer which uses a custom protocol over a USB serial port e
 
 ## USB Communication Protocol
 
-The device appears as a standard virtual COM port (CDC-ACM with vendor-specific protocol) when connected to a host machine. 
-The setup of the interface is done through control requests, 
+The device appears as a standard virtual COM port (CDC-ACM with vendor-specific protocol)
+when connected to a host machine.
+The setup of the interface is done through control requests,
 while the bus activity is communicated through the dedicated data endpoints.
 
 ### CAN bus setup
@@ -30,9 +31,9 @@ Setting up the CAN bus parameters is analogical to the serial port setup. The sa
 Data = {dwBaudrate (4), bTrcvPwr */Stop bit/* (1), bTestMode */Parity/* (1), bDataBits (1)}
 
 1. **dwBaudrate** baudrate of the CAN bus in bit/s (bit timing is calculated internally)
-2. **bTrcvPwr** when set, connects USB 5V to the on-board CAN transceiver
-3. **bTestMode** 0 for normal operation, 1 for loopback 
-4. **bDataBits** read-only, returns 64
+2. **bTrcvPwr** when set, connects USB 5V to the on-board CAN transceiver (via U2 switch)
+3. **bTestMode** 0 for normal operation, 1 for loopback
+4. **bDataBits** unused
 
 ### Data pipe packets
 
@@ -49,7 +50,8 @@ The second byte is the message type, and the rest is type dependent, as shown in
 | 3      | 0x40 | CAN bus error            | {1 byte error info} |
 | 2      | 0x8# | CAN frame sent by device | {} |
 
-The last two types are only sent by the device, the others are both sent by the hostto initiate a CAN frame transmission on the bus and by the device when it read a CAN frame from the bus.
+The last two types are only sent by the device, the others (the frame packets) are both sent by the host
+to initiate a CAN frame transmission on the bus and by the device when it read a CAN frame from the bus.
 The frames are always transmitted in the order they are sent to the device.
 
 ## Hardware design
