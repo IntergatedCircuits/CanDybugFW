@@ -54,6 +54,8 @@ The frames are always transmitted in the order they are sent to the device.
 
 ## Hardware design
 
+![Top View](Media/Schematic.png)
+
 The PCB with its respective BOM is available on [OSHPark][OSHPark].
 
 ## External dependencies
