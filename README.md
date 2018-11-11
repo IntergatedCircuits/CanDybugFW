@@ -72,7 +72,7 @@ and the application flash offset has to be removed.
 
 Built with GCC ARM tools.
 
-[OSHPark]: https://oshpark.com/shared_projects/jVh7PNHF
+[OSHPark]: https://oshpark.com/shared_projects/2HR4jZoN
 [STM32_XPD]: https://github.com/IntergatedCircuits/STM32_XPD
 [USBDevice]: https://github.com/IntergatedCircuits/USBDevice
 [DfuBootloader]: https://github.com/IntergatedCircuits/DfuBootloader
