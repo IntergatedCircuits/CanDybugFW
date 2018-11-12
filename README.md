@@ -1,7 +1,7 @@
 # CanDybug [![Build Status](https://travis-ci.org/IntergatedCircuits/CanDybugFW.svg?branch=master)](https://travis-ci.org/IntergatedCircuits/CanDybugFW)
 
 This repository contains the embedded firmware of the CanDybug,
-a CAN bus traffic analizer which uses a custom protocol over a USB serial port emulation.
+a CAN bus traffic analyzer which uses a custom protocol over a USB serial port emulation.
 
 ## Features
 
