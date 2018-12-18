@@ -26,10 +26,11 @@
 /* TODO step 1: specify device header */
 #include <stm32f042x6.h>
 
-/* TODO step 2: specify power supplies */
+/* TODO step 2: enable desired used XPD modules error handling */
+
+/* TODO step 3: specify power supplies */
 #define VDD_VALUE_mV                   3300 /* Value of VDD in mV */
 
-/* TODO step 3: specify oscillator parameters */
-#define HSE_VALUE_Hz 120000000
+/* TODO step 4: specify oscillator parameters */
 
 #endif /* XPD_CONFIG_H_ */

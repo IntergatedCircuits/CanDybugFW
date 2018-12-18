@@ -1,6 +1,7 @@
 
 #include <bsp_system.h>
 #include <xpd_rcc.h>
+#include <xpd_usb.h>
 
 static const RCC_PLL_InitType pllconf = {
     .State = ENABLE,
@@ -19,4 +20,7 @@ void SystemClock_Config(void)
 
     RCC_vPCLK1_Config(CLK_DIV2);
     RCC_vPCLK2_Config(CLK_DIV1);
+
+    /* USB clock configuration - must be operated from 48 MHz */
+    USB_vClockConfig(USB_CLOCKSOURCE_PLL_DIV1p5);
 }

@@ -30,9 +30,7 @@
 
 /* TODO step 3: specify power supplies */
 #define VDD_VALUE_mV                   3300 /* Value of VDD in mV */
-#define VDDA_VALUE_mV                  3300 /* Value of VDD Analog in mV */
 
 /* TODO step 4: specify oscillator parameters */
-#define HSE_VALUE_Hz 12000000
 
 #endif /* __XPD_CONFIG_H_ */

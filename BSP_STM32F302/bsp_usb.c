@@ -24,9 +24,6 @@ static void BSP_USB_Init(void * handle)
     GPIO_vInitPin(USB_DP_PIN, USB_DP_CFG);
     GPIO_vInitPin(USB_CONNECT_PIN, USB_CONNECT_CFG);
 
-    /* USB clock configuration - must be operated from 48 MHz */
-    USB_vClockConfig(USB_CLOCKSOURCE_PLL_DIV1p5);
-
     /* Enable USB FS Interrupt */
     USB_IT_REMAP(ENABLE);
 

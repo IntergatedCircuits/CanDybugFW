@@ -41,9 +41,6 @@ static void BSP_USB_Init(void * handle)
     /* Only necessary for low pin count devices */
     GPIO_PIN_REMAP(PA11_PA12);
 
-    /* USB clock configuration - must be operated from 48 MHz */
-    USB_vClockConfig(USB_CLOCKSOURCE_PLL);
-
     /* Configure USB wakeup */
     EXTI_vInit(USB_WAKEUP_EXTI_LINE, &usbWakeup);
 
