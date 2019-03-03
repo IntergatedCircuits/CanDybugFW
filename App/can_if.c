@@ -45,9 +45,10 @@ static const CAN_FilterType CanFilters[] = {
         .FIFO = 0,
     },
 };
+
 CAN_InitType CanConfig = {
-    .Settings.Mode = CAN_MODE_NORMAL,
-    .Settings.TXFP = ENABLE,
+    .Mode = CAN_MODE_NORMAL,
+    .TXFP = ENABLE, /* Make sure that frames are transmitted in the same order as they are received */
 };
 
 QUEUE_DEF(CanTxQ, CAN_TxMailBox_TypeDef, (CANIF_OUT_DATA_SIZE / 2));
@@ -475,7 +476,7 @@ static XPD_ReturnType Can_Setup(uint32_t baudrate, FunctionalState trcvPwr, CAN_
 
     if (XPD_OK == result)
     {
-        CanConfig.Settings.Mode = testMode;
+        CanConfig.Mode = testMode;
 
         /* Set transceiver power */
         GPIO_vWritePin(CAN_TRV_PS_PIN, trcvPwr);
