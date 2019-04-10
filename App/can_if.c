@@ -30,7 +30,7 @@
 static void             Can_Close           (void * itf);
 static XPD_ReturnType   Can_Setup           (uint32_t baudrate, FunctionalState trcvPwr, CAN_ModeType testMode);
 static XPD_ReturnType   Can_Start           (void);
-static boolean_t        Can_HandleRequest   (uint8_t * msg, uint8_t length);
+static bool             Can_HandleRequest   (uint8_t * msg, uint8_t length);
 static void             Can_FrameReceived   (void * handle);
 static void             Can_FrameSent       (void * handle);
 static void             Can_BusError        (void * handle);
@@ -48,7 +48,7 @@ static const CAN_FilterType CanFilters[] = {
 
 CAN_InitType CanConfig = {
     .Mode = CAN_MODE_NORMAL,
-    .TXFP = ENABLE, /* Make sure that frames are transmitted in the same order as they are received */
+    .TxFifoMode = ENABLE, /* Make sure that frames are transmitted in the same order as they are received */
 };
 
 QUEUE_DEF(CanTxQ, CAN_TxMailBox_TypeDef, (CANIF_OUT_DATA_SIZE / 2));
@@ -261,11 +261,11 @@ static void Can_Close(void * itf)
  * @brief Process a single CanIf message.
  * @param msg: Message data
  * @param length: Message length
- * @return TRUE if request is valid, otherwise FALSE
+ * @return true if request is valid, otherwise false
  */
-static boolean_t Can_HandleRequest(uint8_t * msg, uint8_t length)
+static bool Can_HandleRequest(uint8_t * msg, uint8_t length)
 {
-    boolean_t retval = FALSE;
+    bool retval = false;
 
     /* Determine request type */
     switch (msg[0])
@@ -315,7 +315,7 @@ static boolean_t Can_HandleRequest(uint8_t * msg, uint8_t length)
             memcpy((void*)&new->TDLR.w, msg, new->TDTR.w);
 
             CanTxQ.head = newhead;
-            retval = TRUE;
+            retval = true;
             break;
         }
 
@@ -389,7 +389,7 @@ static void Can_FrameReceived(void * handle)
 static void Can_FrameSent(void * handle)
 {
     uint8_t txmb;
-    boolean_t ok = FALSE;
+    bool ok = false;
 
     /* check all mailboxes for successful interrupt requests */
     for (txmb = 0; txmb < 3; txmb++)
@@ -406,7 +406,7 @@ static void Can_FrameSent(void * handle)
             /* Clear mailbox flags */
             CAN_TXFLAG_CLEAR(Can, txmb, RQCP);
 
-            ok = TRUE;
+            ok = true;
         }
         else if (CAN_TXFLAG_STATUS(Can, txmb, RQCP))
         {
