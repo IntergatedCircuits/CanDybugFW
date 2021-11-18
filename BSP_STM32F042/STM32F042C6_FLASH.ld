@@ -115,7 +115,7 @@ SECTIONS
   } >FLASH
 
   /* Interrupt vector table */
-  .isr_vector_sram 0x20000000 :
+  .isr_vector_sram 0x20000000 (NOLOAD):
   {
     . = ALIGN(4);
     KEEP(*(.isr_vector_sram))
@@ -123,7 +123,7 @@ SECTIONS
   } >RAM
   
   /* RAM variables for DFU */
-  .shared_ram 0x200000C0 :
+  .shared_ram 0x200000C0 (NOLOAD):
   {
       KEEP(*(.dfuSharedSection))
   } >RAM
